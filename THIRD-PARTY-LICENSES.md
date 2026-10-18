@@ -24,8 +24,8 @@ All neural models, dictionaries, and other data must be **obtained separately** 
 
 ## 2. DotNetG2P / DotNetG2P.MeCab
 
-- Source: <https://github.com/k-takahashi42/DotNetG2P> (see the NOTICE file in that repository for the upstream notices included in the dictionary data)
-- License: Apache-2.0 — <https://github.com/k-takahashi42/DotNetG2P/blob/master/LICENSE>
+- Source: <https://github.com/ayutaz/dot-net-g2p> (see its [NOTICE](https://github.com/ayutaz/dot-net-g2p/blob/main/NOTICE) file for the upstream notices included in the dictionary data)
+- License: Apache-2.0 — <https://github.com/ayutaz/dot-net-g2p/blob/main/LICENSE>
 - Used as NuGet packages. The Apache-2.0 text is included in the packages themselves.
 
 ## 3. NAIST Japanese Dictionary
@@ -59,7 +59,7 @@ All neural models, dictionaries, and other data must be **obtained separately** 
 
 ## 6–7. Reference-only projects
 
-- Style-Bert-VITS2 — <https://github.com/litag02/Style-Bert-VITS2> (AGPL-3.0)
+- Style-Bert-VITS2 — <https://github.com/tsukumijima/Style-Bert-VITS2> (AGPL-3.0)
 - AivisSpeech — <https://github.com/Aivis-Project/AivisSpeech> (LGPL-3.0)
 - AivisSpeech-Engine — <https://github.com/Aivis-Project/AivisSpeech-Engine> (LGPL-3.0; VOICEVOX-derived modules are LGPL-3.0)
 

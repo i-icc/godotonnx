@@ -48,7 +48,7 @@ This repository **does not include any model or dictionary** (see [THIRD-PARTY-L
 
 | Path | What | Source |
 |------|------|--------|
-| `research/kohaku.aivmx` | コハク voice model (St-Bert-VITS2 JP-Extra, 44.1 kHz) | `コハク.aivmx` shipped with [AivisSpeech](https://aivis-project.com/speech/) (official release) — license: ACML 1.0 |
+| `research/kohaku.aivmx` | コハク voice model (Style-Bert-VITS2 JP-Extra, 44.1 kHz) | `コハク.aivmx` shipped with [AivisSpeech](https://aivis-project.com/speech/) (official release) — license: ACML 1.0 |
 | `research/bert/model_fp16.onnx` | DeBERTa v2 JP char (large) BERT, FP16 ONNX | [tsukumijima/deberta-v2-large-japanese-char-wwm-onnx](https://huggingface.co/tsukumijima/deberta-v2-large-japanese-char-wwm-onnx) — CC-BY-SA-4.0 |
 | `research/bert/tokenizer.json` | matching char tokenizer | same Hugging Face repo |
 | `research/naist-jdic/` | NAIST Japanese dictionary (`sys.dic`, `unk.dic`, …) | [naist-jdic](https://sourceforge.net/projects/naist-jdic/) — BSD |
@@ -75,8 +75,10 @@ Requirements: **.NET SDK 8.0+** and **Godot 4.7 (.NET/mono edition)** — the st
 ```bash
 # clone, place models as above, then:
 dotnet build godot/Demo.csproj
-open -a ~/Applications/Godot_mono.app --args --path "$(pwd)/godot"   # macOS example
-# or run the editor and open godot/project.godot, then press Play
+
+# macOS: launch the .NET Godot binary directly
+~/Applications/Godot_mono.app/Contents/MacOS/Godot --path godot
+# …or open godot/project.godot in the Godot (.NET) editor and press Play
 ```
 
 The demo opens with the engine initializing (a few seconds), then:
@@ -177,7 +179,7 @@ returns 0.25 s of silence instead of failing (matches the reference pipeline's g
 
 ## CLI (verification tools)
 
-`tools/Sbv2Cli` rotates around `LocalAivmxTtsPaths` — it finds the repo root and `research/` automatically:
+`tools/Sbv2Cli` ships with path resolution built in — it finds the repo root and `research/` automatically:
 
 ```bash
 cd tools/Sbv2Cli
@@ -235,4 +237,4 @@ Code: [MIT](LICENSE) © i-icc.
 Models and dictionaries are **not part of this distribution** and carry their own licenses — see
 [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) for the full inventory (コハク: ACML 1.0 — credit request: “AivisSpeech: コハク”,
 BERT: CC-BY-SA-4.0, naist-jdic: BSD, Style-Bert-VITS2/AivisSpeech: reference-only reimplementations).
-Dataset-style research notes in `docs/` are part of the repository documentation (MIT).
+The Japanese research notes under `docs/` are likewise part of this repository (MIT).
