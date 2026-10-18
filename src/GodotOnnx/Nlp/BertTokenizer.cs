@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace LocalAivmxTts.Nlp
+namespace GodotOnnx.Nlp
 {
     /// <summary>
     /// BERT トークナイザー（research/bert/tokenizer.json 相当）。

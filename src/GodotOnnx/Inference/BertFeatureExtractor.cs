@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LocalAivmxTts.Nlp;
+using GodotOnnx.Nlp;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 
-namespace LocalAivmxTts.Inference
+namespace GodotOnnx.Inference
 {
     /// <summary>
     /// DeBERTa-v2 日本語文字レベル BERT (ONNX) から音素列長分の特徴量を抽出する

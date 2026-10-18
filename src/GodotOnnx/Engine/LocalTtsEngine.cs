@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LocalAivmxTts.Inference;
+using GodotOnnx.Inference;
 
-namespace LocalAivmxTts.Engine;
+namespace GodotOnnx.Engine;
 
 /// <summary>
 /// エンジンの状態。

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LocalAivmxTts.Nlp
+namespace GodotOnnx.Nlp
 {
     /// <summary>
     /// Style-Bert-VITS2 の <c>nlp/symbols.py</c> に対応する記号表。

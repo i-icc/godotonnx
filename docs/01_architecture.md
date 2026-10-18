@@ -60,15 +60,15 @@ engine.CancelAll(); engine.Queue(text, …);
 
 ```
 godot/
-  Demo.csproj                  Godot.NET.Sdk/4.7.0 → src/LocalAivmxTts を参照
+  Demo.csproj                  Godot.NET.Sdk/4.7.0 → src/GodotOnnx を参照
   project.godot                980x720, main=scenes/Demo.tscn
   scenes/Demo.tscn             ルート Control のみ (UI は Demo.cs がコード構築)
-  scripts/TtsPaths.cs          モデルパス解決 (sln から research/ を探索。env LOCALAIVMX_ROOT 上書き)
+  scripts/TtsPaths.cs          モデルパス解決 (sln から research/ を探索。env GODOTONNX_ROOT 上書き)
   scripts/TtsSpeaker.cs        アダプタ: LocalTtsEngine → AudioStreamWAV 再生 / キュー / 停止
   scripts/Demo.cs              UI 構築 + 操作 (スタイル4種 / 話速 / 重み / 履歴 / Ctrl+Enter / Esc)
 ```
 
-- ライブラリ側ファサード: `src/LocalAivmxTts/Engine/LocalTtsEngine.cs`
+- ライブラリ側ファサード: `src/GodotOnnx/Engine/LocalTtsEngine.cs`
   (非同期読み込み / 合成の直列化 / (text,style,weight,speed,sdp) メモリキャッシュ)
 - 状態遷移はアダプタ側で **メインスレッドのみ** で触碰る pump 方式。
   合成タスクは `Callable.From(...).CallDeferred()` で結果をメインスレッドへ返す。

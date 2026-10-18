@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\LocalAivmxTts\LocalAivmxTts.csproj" />
+    <ProjectReference Include="..\src\GodotOnnx\GodotOnnx.csproj" />
   </ItemGroup>
 
 </Project>

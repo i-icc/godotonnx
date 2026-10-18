@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using LocalAivmxTts.Model;
-using LocalAivmxTts.Nlp;
+using GodotOnnx.Model;
+using GodotOnnx.Nlp;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using DotNetG2P;
 
-namespace LocalAivmxTts.Inference
+namespace GodotOnnx.Inference
 {
     /// <summary>合成オプション（Style-Bert-VITS2 の推論パラメータ）。</summary>
     /// <param name="StyleId">スタイル ID (0..num_styles-1)</param>

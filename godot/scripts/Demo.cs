@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
-using LocalAivmxTts.Inference;
+using GodotOnnx.Inference;
 
 namespace Demo;
 
@@ -68,7 +68,7 @@ public partial class Demo : Control
         if (paths is null)
         {
             UpdateStatus(ErrorColor,
-                "モデルが見つかりません (LocalAivmxTts.sln があるディレクトリの research/ に配置してください)");
+                "モデルが見つかりません (GodotOnnx.sln があるディレクトリの research/ に配置してください)");
             return;
         }
 

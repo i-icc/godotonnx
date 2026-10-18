@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace LocalAivmxTts.Model
+namespace GodotOnnx.Model
 {
     /// <summary>
     /// AIVMX の <c>aivm_hyper_parameters</c> メタデータのうち推論に必要な部分

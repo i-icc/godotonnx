@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 
-namespace LocalAivmxTts.Model
+namespace GodotOnnx.Model
 {
     /// <summary>graph 入力（または出力）の情報。</summary>
     /// <param name="Name">入力名</param>

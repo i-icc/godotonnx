@@ -1,4 +1,4 @@
-# LocalAivmxTts
+# godotonnx
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet)
@@ -13,7 +13,7 @@ Japanese text ──▶ normalization ──▶ G2P (phonemes + accent) ──�
                 (NAIST dict)        (DotNetG2P + MeCab)         (DeBERTa v2)        (ONNX Runtime)
 ```
 
-`LocalAivmxTts` is a Godot-free C# core library plus a Godot 4.7 demo app. Everything runs in-process on
+`godotonnx` is a Godot-free C# core library plus a Godot 4.7 demo app. Everything runs in-process on
 [ONNX Runtime](https://github.com/microsoft/onnxruntime); your game just calls `SynthesizeAsync(text)` and plays the returned PCM.
 
 <p align="center">
@@ -44,7 +44,7 @@ Japanese text ──▶ normalization ──▶ G2P (phonemes + accent) ──�
 
 ## Models you need
 
-This repository **does not include any model or dictionary** (see [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)). Place them as follows — the demo and CLI look them up automatically by walking up from the project directory to `LocalAivmxTts.sln`, then using `research/`. (Override the root with the `LOCALAIVMX_ROOT` environment variable.)
+This repository **does not include any model or dictionary** (see [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)). Place them as follows — the demo and CLI look them up automatically by walking up from the project directory to `GodotOnnx.sln`, then using `research/`. (Override the root with the `GODOTONNX_ROOT` environment variable.)
 
 | Path | What | Source |
 |------|------|--------|
@@ -100,13 +100,13 @@ TTS_DEMO_SMOKE=1 <Godot .NET binary> --headless --path godot
 
 ## Use it in your own Godot project
 
-Reference `src/LocalAivmxTts/LocalAivmxTts.csproj` from your Godot .NET project (it has no Godot dependency):
+Reference `src/GodotOnnx/GodotOnnx.csproj` from your Godot .NET project (it has no Godot dependency):
 
 ```csharp
 using System;
 using Godot;
-using LocalAivmxTts.Engine;
-using LocalAivmxTts.Inference;
+using GodotOnnx.Engine;
+using GodotOnnx.Inference;
 
 public partial class MySpeaker : Node
 {
@@ -193,7 +193,7 @@ dotnet run -- onnx path/to/model.onnx             # ONNX input/output signatures
 ## Architecture and compatibility notes
 
 ```
-src/LocalAivmxTts                    (Godot-free, POCO + System.* only)
+src/GodotOnnx                    (Godot-free, POCO + System.* only)
 ├── Nlp/                 JapaneseTextNormalizer (numbers→kanji, punctuation cleanup), G2P, MoraTable
 ├── Model/               AivmxPackage (protobuf/npy parsing), HyperParameters, ONNX graph info
 ├── Inference/           BertFeatureExtractor, Sbv2Synthesizer (rank-1 inputs, style vec), WaveWriter
@@ -214,7 +214,7 @@ godot/                               Godot 4.7 .NET demo (thin adapter only)
 ## Development
 
 ```bash
-dotnet build LocalAivmxTts.sln          # src + CLI
+dotnet build GodotOnnx.sln          # src + CLI
 dotnet build godot/Demo.csproj          # demo (Godot.NET.Sdk 4.7.0 via NuGet; no editor needed to build)
 cd tools/Sbv2Cli && dotnet run -- compare   # needs research/naist-jdic + tools/pythonref/dump/*.json
 ```
@@ -225,7 +225,7 @@ CI builds the solution and the demo across Linux/macOS/Windows (`.github/workflo
 
 | Path | Contents |
 |------|----------|
-| `src/LocalAivmxTts` | Core library (see above) |
+| `src/GodotOnnx` | Core library (see above) |
 | `tools/Sbv2Cli` | Verification CLI and reference dumps (`tools/pythonref/dump`) |
 | `godot/` | Godot 4.7 (.NET) demo application |
 | `docs/` | Design + compatibility research notes (Japanese) |

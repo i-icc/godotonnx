@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Godot;
-using LocalAivmxTts.Engine;
-using LocalAivmxTts.Inference;
+using GodotOnnx.Engine;
+using GodotOnnx.Inference;
 
 namespace Demo;
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace LocalAivmxTts.Nlp
+namespace GodotOnnx.Nlp
 {
     /// <summary>
     /// Style-Bert-VITS2 の <c>nlp/japanese/mora_list.py</c>（モーラ対応表）と

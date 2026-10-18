@@ -1,11 +1,11 @@
 using System.Text;
 using System.Text.Json;
 using DotNetG2P;
-using LocalAivmxTts.Inference;
-using LocalAivmxTts.Model;
-using LocalAivmxTts.Nlp;
+using GodotOnnx.Inference;
+using GodotOnnx.Model;
+using GodotOnnx.Nlp;
 
-// Sbv2Cli: LocalAivmxTts の開発用 CLI。G2P 検証 / リファレンス dump 比較 / 音声合成を行う。
+// Sbv2Cli: GodotOnnx の開発用 CLI。G2P 検証 / リファレンス dump 比較 / 音声合成を行う。
 //
 // 使い方:
 //   onnx <model.onnx>                    ONNX IO 仕様の表示
@@ -76,7 +76,7 @@ static G2PEngine CreateEngine(Dictionary<string, string> opts)
     var jdic = opts.TryGetValue("jdic", out var j)
         ? j
         : Environment.GetEnvironmentVariable("NAIST_JDIC_PATH")
-            ?? Path.Combine(LocalAivmxTtsPaths.Root, "research", "naist-jdic");
+            ?? Path.Combine(GodotOnnxPaths.Root, "research", "naist-jdic");
     return Sbv2JapaneseG2P.CreateEngine(jdic);
 }
 
@@ -194,7 +194,7 @@ int CmdCompare(string[] args)
 {
     var positional = new List<string>();
     var opts = ParseOptions(args, positional);
-    var dumpDir = opts.TryGetValue("dumpdir", out var d) ? d : Path.Combine(LocalAivmxTtsPaths.Root, DefaultDumpDir);
+    var dumpDir = opts.TryGetValue("dumpdir", out var d) ? d : Path.Combine(GodotOnnxPaths.Root, DefaultDumpDir);
 
     if (!File.Exists(Path.Combine(dumpDir, "greet.json")))
     {
@@ -207,7 +207,7 @@ int CmdCompare(string[] args)
         : Directory.GetFiles(dumpDir, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>().Order().ToArray();
 
     var engine = CreateEngine(opts);
-    var tokPath = opts.TryGetValue("tok", out var t) ? t : Path.Combine(LocalAivmxTtsPaths.Root, DefaultTokenizer);
+    var tokPath = opts.TryGetValue("tok", out var t) ? t : Path.Combine(GodotOnnxPaths.Root, DefaultTokenizer);
     var totalFail = 0;
     foreach (var slug in slugs)
     {
@@ -401,15 +401,15 @@ static void ResolvePaths(Dictionary<string, string> opts)
 {
     if (!opts.ContainsKey("model"))
     {
-        opts["model"] = Path.Combine(LocalAivmxTtsPaths.Root, DefaultModel);
+        opts["model"] = Path.Combine(GodotOnnxPaths.Root, DefaultModel);
     }
     if (!opts.ContainsKey("bert"))
     {
-        opts["bert"] = Path.Combine(LocalAivmxTtsPaths.Root, DefaultBert);
+        opts["bert"] = Path.Combine(GodotOnnxPaths.Root, DefaultBert);
     }
     if (!opts.ContainsKey("tok"))
     {
-        opts["tok"] = Path.Combine(LocalAivmxTtsPaths.Root, DefaultTokenizer);
+        opts["tok"] = Path.Combine(GodotOnnxPaths.Root, DefaultTokenizer);
     }
 }
 
@@ -424,11 +424,11 @@ static string GetJdic(Dictionary<string, string> opts)
     {
         return env;
     }
-    return Path.Combine(LocalAivmxTtsPaths.Root, "research", "naist-jdic");
+    return Path.Combine(GodotOnnxPaths.Root, "research", "naist-jdic");
 }
 
-/// <summary>プロジェクトルート検出 (src/LocalAivmxTts が直下になるまで親を遡る)。</summary>
-static class LocalAivmxTtsPaths
+/// <summary>プロジェクトルート検出 (src/GodotOnnx が直下になるまで親を遡る)。</summary>
+static class GodotOnnxPaths
 {
     public static readonly string Root = FindRoot();
 
@@ -438,7 +438,7 @@ static class LocalAivmxTtsPaths
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         for (var i = 0; i < 8 && dir is not null; dir = dir.Parent, i++)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "LocalAivmxTts.sln")))
+            if (File.Exists(Path.Combine(dir.FullName, "GodotOnnx.sln")))
             {
                 return dir.FullName;
             }

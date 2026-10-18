@@ -7,7 +7,7 @@ namespace Demo;
 
 /// <summary>
 /// モデル/辞書ファイルのパス解決。
-/// 開発環境ではリポジトリルート (LocalAivmxTts.sln のある場所) の research/ を探索する。
+/// 開発環境ではリポジトリルート (GodotOnnx.sln のある場所) の research/ を探索する。
 /// 将来の配布 (Phase 4) では user:// や res://Aivis/ へのフォールバックを追加する。
 /// </summary>
 public static class TtsPaths
@@ -20,7 +20,7 @@ public static class TtsPaths
     public static ModelPaths? Resolve()
     {
         // 1) 環境変数による上書き (デモ用)
-        var envRoot = System.Environment.GetEnvironmentVariable("LOCALAIVMX_ROOT");
+        var envRoot = System.Environment.GetEnvironmentVariable("GODOTONNX_ROOT");
         var candidates = new List<string>();
         if (!string.IsNullOrEmpty(envRoot))
         {
@@ -56,7 +56,7 @@ public static class TtsPaths
         var dir = Directory.Exists(start) ? start : Path.GetDirectoryName(Path.GetFullPath(start));
         while (!string.IsNullOrEmpty(dir))
         {
-            if (File.Exists(Path.Combine(dir, "LocalAivmxTts.sln")))
+            if (File.Exists(Path.Combine(dir, "GodotOnnx.sln")))
             {
                 return dir;
             }

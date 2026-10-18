@@ -7,7 +7,7 @@ using DotNetG2P;
 using DotNetG2P.JPCommon;
 using DotNetG2P.Models;
 
-namespace LocalAivmxTts.Nlp
+namespace GodotOnnx.Nlp
 {
     /// <summary>G2P の結果</summary>
     /// <param name="Phones">punctuation を含む音素列（先頭末尾に <c>_</c> を含む）</param>

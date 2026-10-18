@@ -22,7 +22,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Build library + CLI
-        run: dotnet build LocalAivmxTts.sln --configuration Release
+        run: dotnet build GodotOnnx.sln --configuration Release
 
       - name: Build Godot demo
         run: dotnet build godot/Demo.csproj --configuration Release

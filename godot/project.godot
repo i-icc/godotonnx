@@ -6,7 +6,7 @@ config_version=5
 
 [application]
 
-config/name="LocalAivmxTts Demo"
+config/name="godotonnx demo"
 config/description="コハク (AIVMX) をローカル ONNX 推論で発話させる Godot 4 デモ"
 run/main_scene="res://scenes/Demo.tscn"
 config/features=PackedStringArray("4.7", "C#")

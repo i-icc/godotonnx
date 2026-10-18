@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LocalAivmxTts.Model
+namespace GodotOnnx.Model
 {
     /// <summary>
     /// AIVM マニフェスト（<c>aivm_manifest</c> メタデータ）のうち必要な部分。

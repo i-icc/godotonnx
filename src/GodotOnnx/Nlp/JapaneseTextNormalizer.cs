@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace LocalAivmxTts.Nlp
+namespace GodotOnnx.Nlp
 {
     /// <summary>
     /// Style-Bert-VITS2 の <c>nlp/japanese/normalizer.py</c> 相当の日本語テキスト正規化。

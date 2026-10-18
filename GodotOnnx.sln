@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{834136F4-0430-4B0A-9409-BD1BE8096CE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalAivmxTts", "src\LocalAivmxTts\LocalAivmxTts.csproj", "{A2316FF5-F8D2-4B94-8689-0D6DCD054DD6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GodotOnnx", "src\GodotOnnx\GodotOnnx.csproj", "{A2316FF5-F8D2-4B94-8689-0D6DCD054DD6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{58D976C9-130C-4DBE-81C6-829E990545D0}"
 EndProject

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json.Serialization;
 
-namespace LocalAivmxTts.Model
+namespace GodotOnnx.Model
 {
     /// <summary>AIVMX メタデータ用の JSON シリアライズコンテキスト。</summary>
     [JsonSerializable(typeof(HyperParameters))]

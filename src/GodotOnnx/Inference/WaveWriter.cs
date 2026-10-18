@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace LocalAivmxTts.Inference
+namespace GodotOnnx.Inference
 {
     /// <summary>16bit / mono の WAV を書き出す。</summary>
     public static class WaveWriter
