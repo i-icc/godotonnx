@@ -221,6 +221,13 @@ cd tools/Sbv2Cli && dotnet run -- compare   # needs research/naist-jdic + tools/
 
 CI builds the solution and the demo across Linux/macOS/Windows (`.github/workflows/ci.yml`).
 
+Secrets are scanned on every push/PR by [gitleaks](https://github.com/gitleaks/gitleaks) (`.github/workflows/gitleaks.yml`), and locally we enable a pre-commit hook:
+
+```bash
+brew install gitleaks              # or a binary release from GitHub Releases
+git config core.hooksPath .githooks
+```
+
 ## Project layout
 
 | Path | Contents |

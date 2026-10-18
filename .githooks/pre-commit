@@ -1,0 +1,23 @@
+#!/bin/sh
+# gitleaks pre-commit hook: blocks commits containing secrets in staged files.
+#
+# Setup (once per clone):
+#   brew install gitleaks          # runs locally
+#   git config core.hooksPath .githooks
+#
+# Behavior:
+#   - gitleaks not installed  -> hook is skipped (CI still enforces the scan)
+#   - secrets detected        -> commit fails; show the finding with `gitleaks detect --source . -v`
+#   - confirmed false positive -> either fix .gitleaks.toml (not present by default) or use `git commit --no-verify`
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  exit 0
+fi
+
+gitleaks protect --staged --redact || {
+  echo ""
+  echo ":: gitleaks: secrets detected in staged files — commit blocked."
+  echo "   Review the finding above and remove the secret."
+  echo "   If this is a false positive, bypass with: git commit --no-verify"
+  exit 1
+}
