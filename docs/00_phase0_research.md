@@ -107,10 +107,10 @@ AivisSpeech Engine は tsqyomi (ONNX 小物モデル) で文脈依存の読み�
 | AivisSpeech-Engine | LGPL-3.0 | 参照のみ・コード持ち込まない ✔ |
 | style-bert-vits2 (tsukumijima) | AGPL-3.0 | 参照のみ・アルゴリズム自前実装 ✔ |
 | uStyle-Bert-VITS2 | Apache-2.0 | 参照可能 |
-| コハク (.aivmx) | ACML 1.0 (manifest 内完全文) | 配布可 (添付必須、禁止事項遵守) |
-| deberta…char-wwm-onnx | cl-tohoku 系準拠 | 本モデル同梱条件を別途要確認 (T-2) |
+| コハク (.aivmx) | ACML 1.0 (manifest 内完全文) | 配布可 (添付必須、禁止事項遵守)。開発環境の実物 metadata で確認済 (2026-10-18) |
+| deberta-v2-large-japanese-char-wwm-onnx (tsukumijima) | CC-BY-SA-4.0 (基盤 ku-nlp モデル由来) | **リポジトリ非同梱**。ユーザー取得手順のみ文書化 ✔ (T-2 解決) |
 | DotNetG2P | Apache-2.0 | NuGet 同梱 ✔ |
-| naist-jdic | BSD-3 / IPA 修正ライセンス | 配布条件確認 (T-3) |
+| naist-jdic | BSD (© 2009 NAIST, COPYING 同梱) | **リポジトリ非同梱**。ユーザー取得手順のみ文書化 ✔ (T-3 解決) |
 | ONNX Runtime | MIT | ✔ |
 | Godot | MIT / Godot ライセンス | ✔ |
 
@@ -121,8 +121,8 @@ AivisSpeech Engine は tsqyomi (ONNX 小物モデル) で文脈依存の読み�
 | ID | 内容 | 対応 |
 | --- | --- | --- |
 | T-1 | DotNetG2P 経由の phone/tone 列が pyopenjtalk と完全一致するか | **解決** (2026-10-17): compare 16/16 slug PASS。差分吸収は `ToMecabInput`(ASCII→全角 mecab 正規化), `NormalizeNodeForLabels`(ヲ→オ / 句頭長音除去を ChainFlag で判定+F fixDotNetG2PPairs(dy/ty+i)。ラベル尾部 B/C/D フィールドのみ定数差が残存 (モデル入力に影響なし) → `docs/02_g2p_compat.md` |
-| T-2 | BERT (char-wwm) の同梱ライセンス条件 | README/ライセンス文書確認後に配布へ記載 |
-| T-3 | naist-jdic 再配布条件 (表記とREADME) | 辞書付属イメージ同梱で条件を文書化 |
+| T-2 | BERT (char-wwm) の同梱ライセンス条件 | **解決** (2026-10-18): tsukumijima 変換 ONNX / 基盤 ku-nlp モデルとも CC-BY-SA-4.0。モデルはリポジトリに同梱しない方針 → `THIRD-PARTY-LICENSES.md` + README の取得手順で対応 |
+| T-3 | naist-jdic 再配布条件 (表記とREADME) | **解決** (2026-10-18): COPYING は BSD (© 2009 NAIST)。リポジトリ同梱をやめユーザー取得 (BSD 注意書きを THIRD-PARTY-LICENSES.md に転載済み) |
 | T-4 | 長文 (数千文字) での BERT 512 制限とメモリ | 文分割 (500文字以内) をライブラリ側で実施 |
 | T-5 | NumToKanji (num2words ja) の完全移植数値パターン | 基本形実装+不足時に成長させる (numbers/decimal dump は PASS 済) |
 | T-6 | Apple Silicon/Windows 以外 (Linux/iOS/Android) | スコープ外だが ONNX Runtime のみ対応可 |
