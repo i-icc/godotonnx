@@ -236,9 +236,32 @@ git config core.hooksPath .githooks
 | `src/GodotOnnx` | Core library (see above) |
 | `tools/Sbv2Cli` | Verification CLI and reference dumps (`tools/pythonref/dump`) |
 | `godot/` | Godot 4.7 (.NET) demo application |
+| `godot/addons/godotonnx` | Reusable Godot addon (TtsSpeaker node + path resolution — see below) |
 | `docs/` | Design + compatibility research notes (Japanese) |
 | `models/` | Model/dictionary files **you** place here (see "Models you need") — **git-ignored, prepared separately** |
 | `research/` | Legacy development layout — third-party reference source trees etc. (**git-ignored**) |
+
+## Godot addon
+
+`src/GodotOnnx` is engine-only; the ready-to-use Godot node set lives in
+[`godot/addons/godotonnx`](godot/addons/godotonnx) — a `TtsSpeaker` node, project-independent path
+resolution (`res://`, `user://`, `GODOTONNX_ROOT`), and plugin metadata. Drop it into any Godot 4 .NET project:
+
+```bash
+cp -R godot/addons/godotonnx <your-project>/addons/
+```
+
+```csharp
+var paths = GodotOnnx.Godot.TtsPaths.Resolve();
+var speaker = new GodotOnnx.Godot.TtsSpeaker();
+AddChild(speaker);
+await speaker.InitializeAsync(paths.Aivmx, paths.BertModel, paths.Tokenizer, paths.NaistJdic);
+speaker.Speak("こんにちは", 0, 1f, 1f);
+```
+
+Details in [`godot/addons/godotonnx/README.md`](godot/addons/godotonnx/README.md). The in-repo demo (`godot/`)
+consumes this same addon folder — it doubles as the integration sample.
+
 
 ## NuGet package
 

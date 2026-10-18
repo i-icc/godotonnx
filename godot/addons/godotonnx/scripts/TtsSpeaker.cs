@@ -6,7 +6,7 @@ using Godot;
 using GodotOnnx.Engine;
 using GodotOnnx.Inference;
 
-namespace Demo;
+namespace GodotOnnx.Godot;
 
 /// <summary>スピーカーの状態。</summary>
 public enum SpeakerState

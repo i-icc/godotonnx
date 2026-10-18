@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
+using GodotOnnx.Godot;
 using GodotOnnx.Inference;
 
 namespace Demo;

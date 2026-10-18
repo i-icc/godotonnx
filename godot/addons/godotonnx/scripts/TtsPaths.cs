@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Godot;
 
-namespace Demo;
+namespace GodotOnnx.Godot;
 
 /// <summary>
 /// モデル/辞書ファイルのパス解決。
