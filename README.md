@@ -44,17 +44,17 @@ Japanese text ──▶ normalization ──▶ G2P (phonemes + accent) ──�
 
 ## Models you need
 
-This repository **does not include any model or dictionary** (see [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)). Place them as follows — the demo and CLI look them up automatically by walking up from the project directory to `GodotOnnx.sln`, then using `research/`. (Override the root with the `GODOTONNX_ROOT` environment variable.)
+This repository **does not include any model or dictionary** (see [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md)). Place them under `models/` — the demo and CLI search these bases in order: the `GODOTONNX_ROOT` environment variable (if set), the repo root found by walking up from the project directory to `GodotOnnx.sln`, then `res://` (PCK-bundled files in exported games), and `user://`. Within each base, `models/` is preferred; the legacy development layout `research/` also works as a fallback.
 
 | Path | What | Source |
 |------|------|--------|
-| `research/kohaku.aivmx` | コハク voice model (Style-Bert-VITS2 JP-Extra, 44.1 kHz) | `コハク.aivmx` shipped with [AivisSpeech](https://aivis-project.com/speech/) (official release) — license: ACML 1.0 |
-| `research/bert/model_fp16.onnx` | DeBERTa v2 JP char (large) BERT, FP16 ONNX | [tsukumijima/deberta-v2-large-japanese-char-wwm-onnx](https://huggingface.co/tsukumijima/deberta-v2-large-japanese-char-wwm-onnx) — CC-BY-SA-4.0 |
-| `research/bert/tokenizer.json` | matching char tokenizer | same Hugging Face repo |
-| `research/naist-jdic/` | NAIST Japanese dictionary (`sys.dic`, `unk.dic`, …) | [naist-jdic](https://sourceforge.net/projects/naist-jdic/) — BSD |
+| `models/kohaku.aivmx` | コハク voice model (Style-Bert-VITS2 JP-Extra, 44.1 kHz) | `コハク.aivmx` shipped with [AivisSpeech](https://aivis-project.com/speech/) (official release) — license: ACML 1.0 |
+| `models/bert/model_fp16.onnx` | DeBERTa v2 JP char (large) BERT, FP16 ONNX | [tsukumijima/deberta-v2-large-japanese-char-wwm-onnx](https://huggingface.co/tsukumijima/deberta-v2-large-japanese-char-wwm-onnx) — CC-BY-SA-4.0 |
+| `models/bert/tokenizer.json` | matching char tokenizer | same Hugging Face repo |
+| `models/naist-jdic/` | NAIST Japanese dictionary (`sys.dic`, `unk.dic`, …) | [naist-jdic](https://sourceforge.net/projects/naist-jdic/) — BSD |
 
 ```text
-research/
+models/
 ├── kohaku.aivmx
 ├── bert/
 │   ├── model_fp16.onnx
@@ -179,14 +179,15 @@ returns 0.25 s of silence instead of failing (matches the reference pipeline's g
 
 ## CLI (verification tools)
 
-`tools/Sbv2Cli` ships with path resolution built in — it finds the repo root and `research/` automatically:
+`tools/Sbv2Cli` ships with path resolution built in — it finds the repo root and `models/` automatically, and `paths` prints what was found or what is missing:
 
 ```bash
 cd tools/Sbv2Cli
+dotnet run -- paths    show resolved asset paths (OK / MISSING for each file)
 dotnet run -- compare   # G2P → compare with pyopenjtalk 0.4.1 dumps: all 16 slugs PASS
 dotnet run -- synth "今日もいい天気ですね" --style あまあま --weight 0.6 --speed 1.2 --out out.wav
 dotnet run -- g2p "ディスプレイ"                   # print normalized text / tones / phones / word2ph
-dotnet run -- meta ../../research/kohaku.aivmx     # model metadata (styles, sampling rate…)
+dotnet run -- meta ../../models/kohaku.aivmx     # model metadata (styles, sampling rate…)
 dotnet run -- onnx path/to/model.onnx             # ONNX input/output signatures
 ```
 
@@ -216,7 +217,7 @@ godot/                               Godot 4.7 .NET demo (thin adapter only)
 ```bash
 dotnet build GodotOnnx.sln          # src + CLI
 dotnet build godot/Demo.csproj          # demo (Godot.NET.Sdk 4.7.0 via NuGet; no editor needed to build)
-cd tools/Sbv2Cli && dotnet run -- compare   # needs research/naist-jdic + tools/pythonref/dump/*.json
+cd tools/Sbv2Cli && dotnet run -- compare   # needs models/naist-jdic + tools/pythonref/dump/*.json
 ```
 
 CI builds the solution and the demo across Linux/macOS/Windows (`.github/workflows/ci.yml`).
@@ -236,7 +237,35 @@ git config core.hooksPath .githooks
 | `tools/Sbv2Cli` | Verification CLI and reference dumps (`tools/pythonref/dump`) |
 | `godot/` | Godot 4.7 (.NET) demo application |
 | `docs/` | Design + compatibility research notes (Japanese) |
-| `research/` | Third-party models/dictionaries — **git-ignored, must be prepared separately** |
+| `models/` | Model/dictionary files **you** place here (see "Models you need") — **git-ignored, prepared separately** |
+| `research/` | Legacy development layout — third-party reference source trees etc. (**git-ignored**) |
+
+## NuGet package
+
+The core library also ships as a NuGet package (`GodotOnnx`, MIT). It contains the C# engine plus its managed
+dependencies only — Godot 4 .NET apps add it directly:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="GodotOnnx" Version="0.1.0" />
+</ItemGroup>
+```
+
+Ways to get it:
+
+- **nuget.org** — [`release.yml`](.github/workflows/release.yml) pushes automatically whenever a `v*` tag is pushed,
+  provided the `NUGET_API_KEY` repository secret is configured.
+- **GitHub Releases** — the same workflow attaches the built `.nupkg` to the release; install a local copy with
+  `dotnet add package <path-to-folder>`.
+
+Build it locally yourself:
+
+```bash
+dotnet pack src/GodotOnnx/GodotOnnx.csproj -c Release
+```
+
+Models and dictionaries are never part of the package — your app decides where they live and passes the paths to
+`InitializeAsync` (sources and licenses are listed under [Models you need](#models-you-need)).
 
 ## License
 

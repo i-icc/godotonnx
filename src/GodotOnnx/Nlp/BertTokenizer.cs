@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 namespace GodotOnnx.Nlp
 {
     /// <summary>
-    /// BERT トークナイザー（research/bert/tokenizer.json 相当）。
+    /// BERT トークナイザー（models/bert/tokenizer.json 相当）。
     /// </summary>
     /// <remarks>
     /// 参照実装の設定:

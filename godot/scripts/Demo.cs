@@ -68,7 +68,8 @@ public partial class Demo : Control
         if (paths is null)
         {
             UpdateStatus(ErrorColor,
-                "モデルが見つかりません (GodotOnnx.sln があるディレクトリの research/ に配置してください)");
+                "モデルが見つかりません (GodotOnnx.sln があるディレクトリの models/ に配置してください)");
+            GD.PrintErr(TtsPaths.DescribeMissing());
             return;
         }
 

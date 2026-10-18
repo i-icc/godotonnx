@@ -12,11 +12,9 @@ using GodotOnnx.Nlp;
 //   meta <model.aivmx>                   AIVMX メタデータ表示
 //   g2p [--jdic DIR] <text...>           G2P 結果表示
 //   compare [--dumpdir DIR] [--jdic DIR] <slug...>  リファレンス dump との突合
+//   paths                                 資産パスの探索結果と欠落の表示
 //   synth [options] <text...>            音声合成 + WAV 出力
 
-const string DefaultModel = "research/kohaku.aivmx";
-const string DefaultBert = "research/bert/model_fp16.onnx";
-const string DefaultTokenizer = "research/bert/tokenizer.json";
 const string DefaultDumpDir = "tools/pythonref/dump";
 
 return args.Length == 0 ? ShowUsage() : args[0] switch
@@ -26,6 +24,7 @@ return args.Length == 0 ? ShowUsage() : args[0] switch
     "g2p" => CmdG2p(args.Skip(1).ToArray()),
     "g2p-debug" => CmdG2pDebug(args.Skip(1).ToArray()),
     "compare" => CmdCompare(args.Skip(1).ToArray()),
+    "paths" => CmdPaths(),
     "synth" => CmdSynth(args.Skip(1).ToArray()),
     _ => ShowUsage(),
 };
@@ -38,6 +37,7 @@ static int ShowUsage()
           Sbv2Cli meta <model.aivmx>
           Sbv2Cli g2p [--jdic DIR] <text...>
           Sbv2Cli compare [--dumpdir DIR] [--jdic DIR] [slug...]
+          Sbv2Cli paths
           Sbv2Cli synth [--model P][--bert P][--tok P][--jdic DIR]
                          [--style NAME|--style-id N][--weight F][--speed F]
                          [--sdp F][--noise F][--noise-w F][--sid N]
@@ -73,11 +73,7 @@ static Dictionary<string, string> ParseOptions(string[] args, List<string> posit
 
 static G2PEngine CreateEngine(Dictionary<string, string> opts)
 {
-    var jdic = opts.TryGetValue("jdic", out var j)
-        ? j
-        : Environment.GetEnvironmentVariable("NAIST_JDIC_PATH")
-            ?? Path.Combine(GodotOnnxPaths.Root, "research", "naist-jdic");
-    return Sbv2JapaneseG2P.CreateEngine(jdic);
+    return Sbv2JapaneseG2P.CreateEngine(GetJdic(opts));
 }
 
 static int CmdOnnx(string[] args)
@@ -98,6 +94,24 @@ static int CmdOnnx(string[] args)
     }
     return 0;
 }
+
+static int CmdPaths()
+{
+    Console.WriteLine($"root : {GodotOnnxPaths.Root}");
+    var jdic = GodotOnnxPaths.Asset("naist-jdic", p => File.Exists(Path.Combine(p, "sys.dic")));
+    Console.WriteLine($"model (aivmx)     : {Status(GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultAivmxName, File.Exists))}");
+    Console.WriteLine($"bert (model_fp16) : {Status(GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultBertName, File.Exists))}");
+    Console.WriteLine($"bert (tokenizer)  : {Status(GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultTokenizerName, File.Exists))}");
+    Console.WriteLine($"naist-jdic        : {Status(jdic)}");
+    Console.WriteLine($"(探索順: <root>/models/ → <root>/research/ (開発環境の旧配置))");
+    Console.WriteLine("入手先とライセンス: README \"Models you need\" および THIRD-PARTY-LICENSES.md");
+    return 0;
+}
+
+static string Status(string path) =>
+    File.Exists(path) || Directory.Exists(path)
+        ? $"OK      {path}"
+        : $"MISSING {path}";
 
 static int CmdMeta(string[] args)
 {
@@ -207,7 +221,7 @@ int CmdCompare(string[] args)
         : Directory.GetFiles(dumpDir, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>().Order().ToArray();
 
     var engine = CreateEngine(opts);
-    var tokPath = opts.TryGetValue("tok", out var t) ? t : Path.Combine(GodotOnnxPaths.Root, DefaultTokenizer);
+    var tokPath = opts.TryGetValue("tok", out var t) ? t : GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultTokenizerName, File.Exists);
     var totalFail = 0;
     foreach (var slug in slugs)
     {
@@ -401,15 +415,15 @@ static void ResolvePaths(Dictionary<string, string> opts)
 {
     if (!opts.ContainsKey("model"))
     {
-        opts["model"] = Path.Combine(GodotOnnxPaths.Root, DefaultModel);
+        opts["model"] = GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultAivmxName, File.Exists);
     }
     if (!opts.ContainsKey("bert"))
     {
-        opts["bert"] = Path.Combine(GodotOnnxPaths.Root, DefaultBert);
+        opts["bert"] = GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultBertName, File.Exists);
     }
     if (!opts.ContainsKey("tok"))
     {
-        opts["tok"] = Path.Combine(GodotOnnxPaths.Root, DefaultTokenizer);
+        opts["tok"] = GodotOnnxPaths.Asset(GodotOnnxPaths.DefaultTokenizerName, File.Exists);
     }
 }
 
@@ -424,13 +438,39 @@ static string GetJdic(Dictionary<string, string> opts)
     {
         return env;
     }
-    return Path.Combine(GodotOnnxPaths.Root, "research", "naist-jdic");
+    return GodotOnnxPaths.Asset("naist-jdic", p => File.Exists(Path.Combine(p, "sys.dic")));
 }
 
-/// <summary>プロジェクトルート検出 (src/GodotOnnx が直下になるまで親を遡る)。</summary>
+/// <summary>プロジェクトルート検出 + 資産 (モデル/辞書) のパス解決。</summary>
 static class GodotOnnxPaths
 {
+    /// <summary>ユーザーが README の手順で配置する標準の資産ディレクトリ。</summary>
+    public const string UserAssetsDir = "models";
+
+    /// <summary>開発環境の旧配置 (models/ が見つからない場合のフォールバック)。</summary>
+    public const string LegacyAssetsDir = "research";
+
+    public const string DefaultAivmxName = "kohaku.aivmx";
+    public const string DefaultBertName = "bert/model_fp16.onnx";
+    public const string DefaultTokenizerName = "bert/tokenizer.json";
+
     public static readonly string Root = FindRoot();
+
+    /// <summary>資産 (root 相対) を models/ → research/ の順に探し、最初に存在するものを返す。</summary>
+    public static string Asset(string rel, Func<string, bool> exists)
+    {
+        var preferred = Path.Combine(Root, UserAssetsDir, rel);
+        if (exists(preferred))
+        {
+            return preferred;
+        }
+        var legacy = Path.Combine(Root, LegacyAssetsDir, rel);
+        if (exists(legacy))
+        {
+            return legacy;
+        }
+        return preferred;
+    }
 
     static string FindRoot()
     {

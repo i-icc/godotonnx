@@ -1,0 +1,44 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack the NuGet package
+        run: dotnet pack src/GodotOnnx/GodotOnnx.csproj -c Release -o artifacts
+
+      # Publishes to nuget.org only for accounts with the secret configured;
+      # otherwise the package is distributed via the GitHub Release attached below.
+      - name: Push to NuGet.org (skipped when NUGET_API_KEY secret is not set)
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "NUGET_API_KEY not set — skipping nuget.org push (GitHub Release only)"
+          else
+            dotnet nuget push artifacts/*.nupkg \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg \
+            --title "GodotOnnx $GITHUB_REF_NAME" \
+            --generate-notes

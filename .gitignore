@@ -17,6 +17,9 @@ export/
 __pycache__/
 *.pyc
 
-# Large third-party assets & models (別途取得して配置する)
+# Model/dictionary files placed by the user (README: "Models you need")
+models/
+
+# Legacy development layout (third-party reference source trees etc.)
 research/
 *.aivmx

@@ -4,12 +4,31 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- NuGet package (dotnet pack / .github/workflows/release.yml on v* tags) -->
+    <PackageId>GodotOnnx</PackageId>
+    <Title>GodotOnnx</Title>
+    <Version>0.1.0</Version>
+    <Authors>i-icc</Authors>
+    <Description>Local AIVMX (AivisSpeech-compatible) Japanese text-to-speech engine for Godot 4 .NET.
+ONNX Runtime inference runs in-process — no external TTS server, no Python runtime.
+Models are not bundled: place them under models/ as described in the README.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/i-icc/godotonnx</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Godot;TTS;AIVMX;AivisSpeech;ONNX;Japanese;Speech;Voice</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNetG2P" Version="1.10.0" />
     <PackageReference Include="DotNetG2P.MeCab" Version="1.10.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\THIRD-PARTY-LICENSES.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

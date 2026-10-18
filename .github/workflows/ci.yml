@@ -28,4 +28,4 @@ jobs:
         run: dotnet build godot/Demo.csproj --configuration Release
 
       # Note: model-dependent verification (compare / synth / smoke test) requires
-      # research/ models + dictionaries which are not part of this repository.
+      # models/ assets + dictionaries which are not part of this repository.

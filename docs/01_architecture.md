@@ -63,7 +63,7 @@ godot/
   Demo.csproj                  Godot.NET.Sdk/4.7.0 → src/GodotOnnx を参照
   project.godot                980x720, main=scenes/Demo.tscn
   scenes/Demo.tscn             ルート Control のみ (UI は Demo.cs がコード構築)
-  scripts/TtsPaths.cs          モデルパス解決 (sln から research/ を探索。env GODOTONNX_ROOT 上書き)
+  scripts/TtsPaths.cs          モデルパス解決 (GODOTONNX_ROOT → リポジトリルート → res:// → user:// の順で models/ を探索。開発環境の旧 research/ もフォールバック)
   scripts/TtsSpeaker.cs        アダプタ: LocalTtsEngine → AudioStreamWAV 再生 / キュー / 停止
   scripts/Demo.cs              UI 構築 + 操作 (スタイル4種 / 話速 / 重み / 履歴 / Ctrl+Enter / Esc)
 ```
