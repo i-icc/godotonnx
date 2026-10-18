@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+
+# .NET build artifacts
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+
+# Godot cache
+.godot/
+export/
+*.tmp
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Large third-party assets & models (別途取得して配置する)
+research/
+*.aivmx
