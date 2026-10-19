@@ -4,6 +4,7 @@ using DotNetG2P;
 using GodotOnnx.Inference;
 using GodotOnnx.Model;
 using GodotOnnx.Nlp;
+using GodotOnnx.Setup;
 
 // Sbv2Cli: GodotOnnx の開発用 CLI。G2P 検証 / リファレンス dump 比較 / 音声合成を行う。
 //
@@ -13,6 +14,8 @@ using GodotOnnx.Nlp;
 //   g2p [--jdic DIR] <text...>           G2P 結果表示
 //   compare [--dumpdir DIR] [--jdic DIR] <slug...>  リファレンス dump との突合
 //   paths                                 資産パスの探索結果と欠落の表示
+//   download [--base DIR][--only NAME][--verify-only][--yes]
+//                                         モデル/辞書の取得 (SHA-256 検証付き)
 //   synth [options] <text...>            音声合成 + WAV 出力
 
 const string DefaultDumpDir = "tools/pythonref/dump";
@@ -25,6 +28,7 @@ return args.Length == 0 ? ShowUsage() : args[0] switch
     "g2p-debug" => CmdG2pDebug(args.Skip(1).ToArray()),
     "compare" => CmdCompare(args.Skip(1).ToArray()),
     "paths" => CmdPaths(),
+    "download" => CmdDownload(args.Skip(1).ToArray()),
     "synth" => CmdSynth(args.Skip(1).ToArray()),
     _ => ShowUsage(),
 };
@@ -38,6 +42,7 @@ static int ShowUsage()
           Sbv2Cli g2p [--jdic DIR] <text...>
           Sbv2Cli compare [--dumpdir DIR] [--jdic DIR] [slug...]
           Sbv2Cli paths
+          Sbv2Cli download [--base DIR][--only NAME][--verify-only][--yes]
           Sbv2Cli synth [--model P][--bert P][--tok P][--jdic DIR]
                          [--style NAME|--style-id N][--weight F][--speed F]
                          [--sdp F][--noise F][--noise-w F][--sid N]
@@ -92,6 +97,59 @@ static int CmdOnnx(string[] args)
     {
         Console.WriteLine(o.ToString());
     }
+    return 0;
+}
+
+static int CmdDownload(string[] args)
+{
+    var positional = new List<string>();
+    var opts = ParseOptions(args, positional);
+    var baseDir = opts.TryGetValue("base", out var b) ? Path.GetFullPath(b) : GodotOnnxPaths.Root;
+    var verifyOnly = opts.ContainsKey("verify-only");
+    var yes = opts.ContainsKey("yes");
+    string[]? only = opts.TryGetValue("only", out var o) ? o.Split(',') : null;
+
+    var models = Path.Combine(baseDir, "models");
+    Console.WriteLine($"base : {baseDir} (→ {models})");
+    var report = ModelDownloader.Inspect(baseDir);
+    foreach (var e in report.Entries)
+    {
+        var problems = e.Complete ? "OK" : string.Join("; ", e.Problems);
+        Console.WriteLine($"  [{(e.Complete ? "OK " : "!! ")}] {e.Name}: {problems}");
+    }
+    if (verifyOnly)
+    {
+        return report.Complete ? 0 : 1;
+    }
+
+    Console.WriteLine();
+    var entries = ModelCatalog.Entries;
+    foreach (var e in entries)
+    {
+        if (only is not null && !only.Contains(e.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            continue;
+        }
+        Console.WriteLine($"- {e.Name}  [{e.LicenseName}]  {ModelCatalog.PerEntryBytes(e) / 1048576}MB");
+        Console.WriteLine($"  参照: {e.ManualUrl}");
+        if (!string.IsNullOrEmpty(e.Credit))
+        {
+            Console.WriteLine($"  クレジット表記 (任意): {e.Credit}");
+        }
+    }
+    Console.WriteLine($"合計: {ModelCatalog.TotalBytes / 1048576}MB → {models}");
+    if (!yes)
+    {
+        Console.WriteLine("(dry run) 実際にダウンロードするには --yes を付けて再実行してください");
+        return 0;
+    }
+
+    using var downloader = new ModelDownloader();
+    var progress = new Progress<DownloadProgress>(p =>
+        Console.WriteLine($"  {p.BytesDone * 100d / Math.Max(1, p.BytesTotal),5:F1}%  {p.Message}"));
+    downloader.DownloadAllAsync(baseDir, progress, CancellationToken.None, only)
+        .GetAwaiter().GetResult();
+    Console.WriteLine("ダウンロード完了");
     return 0;
 }
 

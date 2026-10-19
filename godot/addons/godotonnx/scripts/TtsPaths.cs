@@ -21,6 +21,12 @@ public static class TtsPaths
     /// <summary>既定の AIVMX パッケージ名。</summary>
     public const string DefaultAivmxName = "kohaku.aivmx";
 
+    /// <summary>user:// 直下 (取得したモデルの既定配置先)。</summary>
+    public static string UserBaseDir()
+    {
+        return ProjectSettings.GlobalizePath("user://");
+    }
+
     /// <summary>ユーザーに案内する資産ディレクトリ名。</summary>
     public const string UserDir = "models";
 

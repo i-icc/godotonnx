@@ -65,7 +65,8 @@ godot/
   scenes/Demo.tscn             ルート Control のみ (UI は Demo.cs がコード構築)
   scripts/TtsPaths.cs          モデルパス解決 (GODOTONNX_ROOT → リポジトリルート → res:// → user:// の順で models/ を探索。開発環境の旧 research/ もフォールバック)
   scripts/TtsSpeaker.cs        アダプタ: LocalTtsEngine → AudioStreamWAV 再生 / キュー / 停止
-  scripts/Demo.cs              UI 構築 + 操作 (スタイル4種 / 話速 / 重み / 履歴 / Ctrl+Enter / Esc)
+  scripts/TtsModelManager.cs   資産の検査と取得 (TtsModelManager.Inspect / DownloadAsync → user://models/)。同意 UI は呼び出し側が提示
+  scripts/Demo.cs              UI 構築 + 操作 (スタイル4種 / 話速 / 重み / 履歴 / Ctrl+Enter / Esc / 初回起動の取得パネル)
 ```
 
 - ライブラリ側ファサード: `src/GodotOnnx/Engine/LocalTtsEngine.cs`
@@ -74,7 +75,11 @@ godot/
   合成タスクは `Callable.From(...).CallDeferred()` で結果をメインスレッドへ返す。
 - 音声変換: float PCM → clip ×32768 → int16 LE → `AudioStreamWav (Format16Bits, mono)`。
 - ヘッドレス検証: `TTS_DEMO_SMOKE=1` で初期化→1発話→終了を自動実行
-  (`TTS_DEMO_SHOT`/`TTS_DEMO_SHOT2` でビューポートのスクリーンショット保存)。
+  (`TTS_DEMO_SHOT`/`TTS_DEMO_SHOT2` でビューポートのスクリーンショット保存、`TTS_DEMO_SETUP_SMOKE=1` で取得パネル描画のみ)。
+- モデル取得: `src/GodotOnnx/Setup/` (.NET/HttpClient のみ、Godot 非依存) —
+  `ModelCatalog` (ソース URL + サイズ + SHA-256 を固定値で埋め込み) と
+  `ModelDownloader` (検証付き DL / .part → 原子的置換 / tar.gz 展開 / .NET標準の GZipStream+自前 tar リーダ)。
+  CLI `download` と Godot `TtsModelManager` から共用。
 - **標準版 Godot では C# スクリプトが無効** のため .NET (mono) 版エディタが必須。
 - Phase 4 (配布: StreamingAssets レイアウト / エクスポート) は未着手。
 

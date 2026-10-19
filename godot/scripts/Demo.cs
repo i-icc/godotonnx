@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Godot;
 using GodotOnnx.Godot;
 using GodotOnnx.Inference;
+using GodotOnnx.Setup;
 
 namespace Demo;
 
@@ -30,6 +31,16 @@ public partial class Demo : Control
     ItemList historyList = null!;
     readonly List<HistoryEntry> history = [];
 
+    // モデル取得 (初回セットアップ) 用
+    TtsModelManager? modelManager;
+    Control? setupPanel;
+    readonly List<(Label RowLabel, ModelCatalog.Entry Entry)> setupRows = [];
+    CheckBox consentCheck = null!;
+    Button setupDownloadButton = null!;
+    Button setupCancelButton = null!;
+    ProgressBar setupProgress = null!;
+    Label setupProgressLabel = null!;
+
     // テーマ色
     static readonly Color BgColor = new("171a21");
     static readonly Color PanelColor = new("20242e");
@@ -50,7 +61,9 @@ public partial class Demo : Control
         speaker.PlaybackStarted += OnPlaybackStarted;
         speaker.QueueChanged += OnQueueChanged;
 
-        _ = InitializeAsync(smokeTest: OS.GetEnvironment("TTS_DEMO_SMOKE") == "1");
+        _ = InitializeAsync(
+            smokeTest: OS.GetEnvironment("TTS_DEMO_SMOKE") == "1",
+            setupSmoke: OS.GetEnvironment("TTS_DEMO_SETUP_SMOKE") == "1");
     }
 
     public override void _UnhandledKeyInput(InputEvent @event)
@@ -63,14 +76,26 @@ public partial class Demo : Control
         }
     }
 
-    async Task InitializeAsync(bool smokeTest = false)
+    async Task InitializeAsync(bool smokeTest = false, bool setupSmoke = false)
     {
+        if (setupSmoke)
+        {
+            // 取得パネル UI のスモーク (モデルの有無に関わらず描画して即 quit)
+            GD.Print("[Smoke] setup panel mode");
+            ShowSetupPanel();
+            await ToSignal(GetTree().CreateTimer(0.6), SceneTreeTimer.SignalName.Timeout);
+            GD.Print("[Smoke] setup panel shown");
+            GetTree().Quit();
+            return;
+        }
+
         var paths = TtsPaths.Resolve();
         if (paths is null)
         {
             UpdateStatus(ErrorColor,
-                "モデルが見つかりません (GodotOnnx.sln があるディレクトリの models/ に配置してください)");
+                "モデルが見つかりません (models/ へ配置 or 下の取得パネルからダウンロード)");
             GD.PrintErr(TtsPaths.DescribeMissing());
+            ShowSetupPanel();
             return;
         }
 
@@ -122,6 +147,172 @@ public partial class Demo : Control
             GD.Print($"[Smoke] screenshot -> {shotPath2}");
         }
         tree.Quit();
+    }
+
+    // -------------------------------------------------------------- セットアップ
+
+    void ShowSetupPanel()
+    {
+        if (setupPanel is not null)
+        {
+            setupPanel.Visible = true;
+            RefreshSetupEntries();
+            return;
+        }
+
+        var panel = new PanelContainer();
+        panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor = new Color(BgColor, 0.94f),
+            ContentMarginLeft = 40,
+            ContentMarginRight = 40,
+            ContentMarginTop = 26,
+            ContentMarginBottom = 24,
+            BorderColor = AccentColor,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            BorderWidthTop = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 10,
+            CornerRadiusTopRight = 10,
+            CornerRadiusBottomLeft = 10,
+            CornerRadiusBottomRight = 10,
+        });
+        AddChild(panel);
+        setupPanel = panel;
+
+        var box = new VBoxContainer().With(c => c.AddThemeConstantOverride("separation", 10));
+        panel.AddChild(box);
+
+        var title = MakeLabel(FgColor, "モデルの入手", 19);
+        box.AddChild(title);
+
+        box.AddChild(MakeLabel(MutedColor,
+            "不足しているモデル/辞書をカタログ (SHA-256 検証済み) から user://models/ へ取得します。\n"
+            + "各ライセンス (ACML / CC-BY-SA-4.0 / BSD) の条項に同意する場合のみ続行してください。", 13));
+
+        var entriesBox = new VBoxContainer().With(c => c.AddThemeConstantOverride("separation", 4));
+        box.AddChild(entriesBox);
+        foreach (var entry in ModelCatalog.Entries)
+        {
+            var row = new Label
+            {
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                Text = "…",
+            };
+            row.AddThemeFontSizeOverride("font_size", 13);
+            entriesBox.AddChild(row);
+            setupRows.Add((row, entry));
+        }
+
+        setupDownloadButton = new Button
+        {
+            Text = "⬇ 取得する",
+            CustomMinimumSize = new Vector2(140, 38),
+            FocusMode = FocusModeEnum.None,
+            Disabled = true,
+        };
+        StyleButton(setupDownloadButton, AccentColor, textDark: true);
+        setupDownloadButton.Pressed += () => _ = RunSetupDownloadAsync();
+
+        consentCheck = new CheckBox
+        {
+            Text = "上記ライセンスの条項に同意してダウンロードする",
+            FocusMode = FocusModeEnum.None,
+        };
+        consentCheck.Toggled += on => setupDownloadButton.Disabled = !on;
+        box.AddChild(consentCheck);
+
+        var buttons = new HBoxContainer().With(c => c.AddThemeConstantOverride("separation", 10));
+        box.AddChild(buttons);
+        buttons.AddChild(setupDownloadButton);
+        setupCancelButton = new Button
+        {
+            Text = "中断",
+            CustomMinimumSize = new Vector2(90, 38),
+            FocusMode = FocusModeEnum.None,
+            Visible = false,
+        };
+        setupCancelButton.Pressed += () => modelManager?.Cancel();
+        buttons.AddChild(setupCancelButton);
+
+        setupProgress = new ProgressBar
+        {
+            MinValue = 0,
+            MaxValue = 1,
+            Value = 0,
+            ShowPercentage = false,
+            CustomMinimumSize = new Vector2(0, 10),
+        };
+        box.AddChild(setupProgress);
+        setupProgressLabel = MakeLabel(MutedColor, "", 12);
+        box.AddChild(setupProgressLabel);
+
+        RefreshSetupEntries();
+    }
+
+    void RefreshSetupEntries()
+    {
+        var statuses = TtsModelManager.Inspect(TtsPaths.UserBaseDir()).Entries;
+        for (var i = 0; i < setupRows.Count && i < statuses.Count; i++)
+        {
+            var (row, entry) = setupRows[i];
+            var s = statuses[i];
+            row.Text = $"{(s.Complete ? "✓" : "·")} {entry.Name}  [{entry.LicenseName}]  "
+                + $"{ModelCatalog.PerEntryBytes(entry) / 1048576}MB"
+                + (s.Complete ? "  (整備済み)" : "");
+            row.AddThemeColorOverride("font_color", s.Complete ? OkColor : FgColor);
+        }
+    }
+
+    async Task RunSetupDownloadAsync()
+    {
+        setupDownloadButton.Visible = false;
+        setupCancelButton.Visible = true;
+        consentCheck.Disabled = true;
+        GD.Print("[Setup] ダウンロード開始 (user://models/)");
+
+        modelManager ??= new TtsModelManager();
+        if (modelManager.GetParent() is null)
+        {
+            AddChild(modelManager);
+        }
+
+        var finished = new TaskCompletionSource<(bool Ok, string Message)>();
+        void OnFinished(bool ok, string message)
+        {
+            modelManager!.Finished -= OnFinished;
+            finished.TrySetResult((ok, message));
+        }
+
+        modelManager.Finished += OnFinished;
+        modelManager.ProgressChanged += OnSetupProgress;
+        var downloadTask = modelManager.DownloadAsync(TtsPaths.UserBaseDir());
+        var (ok, message) = await finished.Task;
+        await downloadTask;
+        modelManager.ProgressChanged -= OnSetupProgress;
+
+        setupCancelButton.Visible = false;
+        if (ok)
+        {
+            GD.Print($"[Setup] {message}");
+            setupPanel!.Visible = false;
+            await InitializeAsync();
+        }
+        else
+        {
+            GD.PrintErr($"[Setup] {message}");
+            setupProgressLabel.Text = message;
+            setupDownloadButton.Visible = true;
+            setupDownloadButton.Disabled = false;
+        }
+    }
+
+    void OnSetupProgress(string message, double fraction)
+    {
+        setupProgress.Value = Math.Clamp(fraction, 0, 1);
+        setupProgressLabel.Text = message;
     }
 
     // ------------------------------------------------------------------ UI 構築

@@ -24,6 +24,7 @@ Japanese text ──▶ normalization ──▶ G2P (phonemes + accent) ──�
 
 - [Features](#features)
 - [Models you need](#models-you-need)
+- [One-shot download (optional)](#one-shot-download-optional)
 - [Quick Start (demo app)](#quick-start-demo-app)
 - [Use it in your own Godot project](#use-it-in-your-own-godot-project)
 - [Synthesis options](#synthesis-options)
@@ -51,7 +52,7 @@ This repository **does not include any model or dictionary** (see [THIRD-PARTY-L
 | `models/kohaku.aivmx` | コハク voice model (Style-Bert-VITS2 JP-Extra, 44.1 kHz) | `コハク.aivmx` shipped with [AivisSpeech](https://aivis-project.com/speech/) (official release) — license: ACML 1.0 |
 | `models/bert/model_fp16.onnx` | DeBERTa v2 JP char (large) BERT, FP16 ONNX | [tsukumijima/deberta-v2-large-japanese-char-wwm-onnx](https://huggingface.co/tsukumijima/deberta-v2-large-japanese-char-wwm-onnx) — CC-BY-SA-4.0 |
 | `models/bert/tokenizer.json` | matching char tokenizer | same Hugging Face repo |
-| `models/naist-jdic/` | NAIST Japanese dictionary (`sys.dic`, `unk.dic`, …) | [naist-jdic](https://sourceforge.net/projects/naist-jdic/) — BSD |
+| `models/naist-jdic/` | NAIST Japanese dictionary (`sys.dic`, `unk.dic`, …) | Open JTalk 1.11 UTF-8 dictionary (contains NAIST-jdic) — BSD, `COPYING` kept alongside |
 
 ```text
 models/
@@ -67,6 +68,23 @@ models/
 ```
 
 Other AIVMX models (AivisSpeech official / [AivisHub](https://hub.aivis-project.com/)) drop in the same way — pass the path to `InitializeAsync`.
+
+### One-shot download (optional)
+
+`Sbv2Cli download` fetches everything above into `models/` from pinned, SHA-256-verified URLs (~933 MB total):
+
+```console
+dotnet run --project tools/Sbv2Cli -- download                     # dry run: plan + licenses only
+dotnet run --project tools/Sbv2Cli -- download --yes               # download (+ extract the dictionary)
+dotnet run --project tools/Sbv2Cli -- download --verify-only       # hash-check an existing models/
+dotnet run --project tools/Sbv2Cli -- download --base DIR --only voice   # subset (voice/bert/dictionary)
+```
+
+- Sources are pinned in `src/GodotOnnx/Setup/ModelCatalog.cs`: the コハク voice from the Aivis Project asset CDN, the BERT files from Hugging Face, and the dictionary from the Open JTalk 1.11 tarball (GitHub release mirror, SourceForge fallback).
+- Everything is verified by size + SHA-256 after download; malformatted or mismatched data is discarded (`.part` file → atomic move). Already-valid files are skipped, so the command is safe to re-run.
+- License note: downloading means you agree to each license (ACML 1.0 for the voice model — “AivisSpeech: コハク” credit requested; CC-BY-SA-4.0 for BERT; BSD for the dictionary with its `COPYING` installed alongside).
+
+The Godot demo shows the same flow at first launch when no assets are found: a consent panel lists the same entries and downloads them into `user://models/` — but only after you tick the agreement checkbox.
 
 ## Quick Start (demo app)
 
@@ -184,6 +202,7 @@ returns 0.25 s of silence instead of failing (matches the reference pipeline's g
 ```bash
 cd tools/Sbv2Cli
 dotnet run -- paths    show resolved asset paths (OK / MISSING for each file)
+dotnet run -- download  # fetch missing assets (see "One-shot download" above)
 dotnet run -- compare   # G2P → compare with pyopenjtalk 0.4.1 dumps: all 16 slugs PASS
 dotnet run -- synth "今日もいい天気ですね" --style あまあま --weight 0.6 --speed 1.2 --out out.wav
 dotnet run -- g2p "ディスプレイ"                   # print normalized text / tones / phones / word2ph
@@ -198,11 +217,13 @@ src/GodotOnnx                    (Godot-free, POCO + System.* only)
 ├── Nlp/                 JapaneseTextNormalizer (numbers→kanji, punctuation cleanup), G2P, MoraTable
 ├── Model/               AivmxPackage (protobuf/npy parsing), HyperParameters, ONNX graph info
 ├── Inference/           BertFeatureExtractor, Sbv2Synthesizer (rank-1 inputs, style vec), WaveWriter
-└── Engine/              LocalTtsEngine facade (async init, serialize, cache)
+├── Engine/              LocalTtsEngine facade (async init, serialize, cache)
+└── Setup/               ModelCatalog (pinned sources + SHA-256) & ModelDownloader (download/verify/extract)
 
 godot/                               Godot 4.7 .NET demo (thin adapter only)
 ├── scripts/TtsSpeaker.cs            queue/playback/cancel on the main thread
 ├── scripts/TtsPaths.cs              model path resolution
+├── scripts/TtsModelManager.cs       asset download (progress/cancel via signals, consent-gated)
 └── scripts/Demo.cs                  code-built UI
 ```
 
@@ -245,7 +266,8 @@ git config core.hooksPath .githooks
 
 `src/GodotOnnx` is engine-only; the ready-to-use Godot node set lives in
 [`godot/addons/godotonnx`](godot/addons/godotonnx) — a `TtsSpeaker` node, project-independent path
-resolution (`res://`, `user://`, `GODOTONNX_ROOT`), and plugin metadata. Drop it into any Godot 4 .NET project:
+resolution (`res://`, `user://`, `GODOTONNX_ROOT`), a `TtsModelManager` node for the one-shot asset
+download (SHA-256 verified, consent-gated), and plugin metadata. Drop it into any Godot 4 .NET project:
 
 ```bash
 cp -R godot/addons/godotonnx <your-project>/addons/
@@ -257,6 +279,14 @@ var speaker = new GodotOnnx.Godot.TtsSpeaker();
 AddChild(speaker);
 await speaker.InitializeAsync(paths.Aivmx, paths.BertModel, paths.Tokenizer, paths.NaistJdic);
 speaker.Speak("こんにちは", 0, 1f, 1f);
+
+// Optional: fetch missing assets after showing your own consent UI
+var manager = new GodotOnnx.Godot.TtsModelManager();
+AddChild(manager);
+if (!GodotOnnx.Godot.TtsModelManager.Inspect(GodotOnnx.Godot.TtsPaths.UserBaseDir()).Complete)
+{
+    await manager.DownloadAsync(GodotOnnx.Godot.TtsPaths.UserBaseDir()); // → user://models/
+}
 ```
 
 Details in [`godot/addons/godotonnx/README.md`](godot/addons/godotonnx/README.md). The in-repo demo (`godot/`)

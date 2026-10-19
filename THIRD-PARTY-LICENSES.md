@@ -68,3 +68,11 @@ These were used as *documents to read* while studying the pipeline (input normal
 ## 8. Godot Engine
 
 - Source: <https://github.com/godotengine/godot> — License: MIT. The demo under `godot/` uses the Godot editor/runtime but contains nothing that affects the licensing of this repository's code.
+
+## Notes on the optional downloader
+
+`Sbv2Cli download` / the Godot `TtsModelManager` fetch items 1–3 above from pinned URLs and verify
+them by SHA-256 (sources pinned in `src/GodotOnnx/Setup/ModelCatalog.cs`): the voice from the Aivis
+Project asset CDN, the BERT files from Hugging Face, and the dictionary from the Open JTalk 1.11
+tarball. The downloader never redistributes or repackages anything — it pulls the original, byte-for-byte
+artifacts. Automatic download still requires explicit user consent, and the same license terms as manual placement apply.

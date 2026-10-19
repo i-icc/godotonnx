@@ -12,7 +12,8 @@ addons/godotonnx/
 ├── README.md
 └── scripts/
     ├── TtsPaths.cs           model/dictionary path resolution (incl. user:// and res://)
-    └── TtsSpeaker.cs         LocalTtsEngine → AudioStreamPlayer adapter node (queue, cancel, 16-bit WAV)
+    ├── TtsSpeaker.cs         LocalTtsEngine → AudioStreamPlayer adapter node (queue, cancel, 16-bit WAV)
+    └── TtsModelManager.cs    one-shot asset download (SHA-256 verified, progress/cancel signals)
 ```
 
 ## Requirements
@@ -68,6 +69,31 @@ addons/godotonnx/
 - Path resolution order: `GODOTONNX_ROOT` (env) → repo root (walk-up to `GodotOnnx.sln`) →
   `res://` (PCK in exported games) → `user://`; each base prefers `models/`, with the legacy
   development `research/` layout still supported as a fallback.
+
+## Fetching the assets (optional)
+
+`TtsModelManager : Node` wraps the engine-less `GodotOnnx.Setup.ModelDownloader`: it checks a base
+directory (`TtsModelManager.Inspect(base)`, SHA-256 comparison, no network), then downloads whatever
+is missing there (`user://` by default) after **your** consent UI —
+
+```csharp
+var manager = new GodotOnnx.Godot.TtsModelManager();
+AddChild(manager);
+manager.ProgressChanged += (message, fraction) => GD.Print($"{fraction:P0} {message}");
+manager.Finished += (ok, message) => GD.Print($"{(ok ? "done" : "failed")}: {message}");
+
+if (!GodotOnnx.Godot.TtsModelManager.Inspect(GodotOnnx.Godot.TtsPaths.UserBaseDir()).Complete)
+{
+    // Show your license screen, then:
+    await manager.DownloadAsync(GodotOnnx.Godot.TtsPaths.UserBaseDir());
+    // onlyNames optional: ["voice"], ["bert"], ["dictionary"] subsets
+}
+// manager.Cancel() aborts mid-download; finished files are kept, retried later.
+```
+
+Signals: `ProgressChanged(message, fraction)` (0..1), `Finished(ok, message)`. Downloads land in
+`base/models/` using pinned URLs and hashes from `ModelCatalog`; already-valid files are skipped, so
+re-running or resuming is safe. The demo project shows a complete consent-first first-launch flow.
 
 The in-repository demo (`godot/`) consumes exactly this addon folder — it doubles as the
 integration sample.
